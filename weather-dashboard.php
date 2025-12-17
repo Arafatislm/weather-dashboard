@@ -1,10 +1,10 @@
 <?php
 /**
  * Plugin Name: Weather Dashboard
- * Plugin URI: https://github.com/Arafatislm/weather-dashboard
+ * Plugin URI: https://github.com/arafatislm/weather-dashboard
  * Description: Displays weather for specific cities using Open-Meteo API. Use [weather_dashboard].
- * Version: 3.0.0
- * Author: Arafat
+ * Version: 3.1.0
+ * Author: Arafatul Islam
  * Author URI: https://arafatislam.net
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -43,14 +43,13 @@ class Weather_Dashboard {
      * Optimization: Preconnect & Preload to speed up asset delivery
      */
     public function add_resource_hints() {
-        add_action('wp_head', function () {
-            echo '<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>' . "\n";
-            });
         // Preload commonly used icons to break critical request chains
         $preload_icons = ['clear-day.svg', 'cloudy.svg', 'rainy-2.svg', 'thunderstorms.svg'];
         foreach ($preload_icons as $icon) {
             echo '<link rel="preload" as="image" href="' . esc_url($this->icon_base_url . $icon) . '">' . "\n";
         }
+        // Add preconnect
+        echo '<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>' . "\n";
     }
 
     /**
@@ -129,6 +128,8 @@ class Weather_Dashboard {
 
     private function generate_skeleton_html() {
         $cities = $this->get_cities_config();
+        $icon_size = get_option( 'twd_icon_size', '3.5rem' );
+        
         $html = '<div class="twd-horizontal">';
         foreach( $cities as $city => $coords ) {
             $html .= '
@@ -178,6 +179,7 @@ class Weather_Dashboard {
         $temp_font_size = get_option( 'twd_temp_font_size', '1.6em' );
         $icon_size = get_option( 'twd_icon_size', '3.5rem' );
         $card_gap = get_option( 'twd_card_gap', '12px' );
+        $min_card_width = get_option( 'twd_min_card_width', '85px' ); // New Option
         ?>
         <style>
             #twd-weather-container {
@@ -200,7 +202,7 @@ class Weather_Dashboard {
                 padding: 2px 2px;
                 display: flex;
                 flex: 0 0 auto;
-                min-width: 85px;
+                min-width: <?php echo esc_html($min_card_width); ?>;
                 flex-direction: column;
                 align-items: center;
                 justify-content: space-between;
@@ -326,7 +328,7 @@ class Weather_Dashboard {
         return ['label' => $label, 'icon' => $icon];
     }
 
-    // --- Admin Settings (kept same as before) ---
+    // --- Admin Settings ---
     public function add_admin_menu() {
         add_options_page( 'Weather Dashboard Settings', 'Weather Dashboard', 'manage_options', 'weather_dashboard', [ $this, 'options_page_html' ] );
     }
@@ -341,6 +343,8 @@ class Weather_Dashboard {
         register_setting( 'twd_options', 'twd_icon_size',   [ 'default' => '3.5rem' ] );
         register_setting( 'twd_options', 'twd_card_gap',    [ 'default' => '12px' ] );
         register_setting( 'twd_options', 'twd_cache_time',  [ 'default' => '60' ] );
+        // NEW Setting
+        register_setting( 'twd_options', 'twd_min_card_width', [ 'default' => '85px' ] );
 
         add_settings_section( 'twd_section_data', 'Data Settings', null, 'weather_dashboard' );
         add_settings_section( 'twd_section_cities', 'City Management', null, 'weather_dashboard' );
@@ -355,6 +359,8 @@ class Weather_Dashboard {
         add_settings_field( 'twd_temp_font_size', 'Temperature Size', [ $this, 'text_field_cb' ], 'weather_dashboard', 'twd_section_style', ['label_for' => 'twd_temp_font_size', 'desc' => 'e.g., 1.6em or 32px'] );
         add_settings_field( 'twd_icon_size', 'Icon Size', [ $this, 'text_field_cb' ], 'weather_dashboard', 'twd_section_style', ['label_for' => 'twd_icon_size', 'desc' => 'e.g., 3.5rem or 60px'] );
         add_settings_field( 'twd_card_gap', 'Card Gap', [ $this, 'text_field_cb' ], 'weather_dashboard', 'twd_section_style', ['label_for' => 'twd_card_gap', 'desc' => 'e.g., 12px'] );
+        // NEW Field
+        add_settings_field( 'twd_min_card_width', 'Minimum Card Width', [ $this, 'text_field_cb' ], 'weather_dashboard', 'twd_section_style', ['label_for' => 'twd_min_card_width', 'desc' => 'e.g., 85px or 120px'] );
     }
 
     public function cities_field_cb() {
