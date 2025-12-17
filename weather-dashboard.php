@@ -3,7 +3,7 @@
  * Plugin Name: Weather Dashboard
  * Plugin URI: https://github.com/arafatislm/weather-dashboard
  * Description: Displays weather for specific cities using Open-Meteo API. Use [weather_dashboard].
- * Version: 3.1.0
+ * Version: 3.2.0
  * Author: Arafatul Islam
  * Author URI: https://arafatislam.net
  * License: GPL v2 or later
@@ -179,12 +179,21 @@ class Weather_Dashboard {
         $temp_font_size = get_option( 'twd_temp_font_size', '1.6em' );
         $icon_size = get_option( 'twd_icon_size', '3.5rem' );
         $card_gap = get_option( 'twd_card_gap', '12px' );
-        $min_card_width = get_option( 'twd_min_card_width', '85px' ); // New Option
+        $min_card_width = get_option( 'twd_min_card_width', '85px' );
+        $align_option = get_option( 'twd_horizontal_align', 'center' );
+
+        // Map alignment option to flex property
+        $justify_content = 'center';
+        switch ( $align_option ) {
+            case 'left': $justify_content = 'flex-start'; break;
+            case 'right': $justify_content = 'flex-end'; break;
+            default: $justify_content = 'center';
+        }
         ?>
         <style>
             #twd-weather-container {
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                margin: 20px 0;
+                margin-top: 5px;
                 width: 100%;
                 font-size: <?php echo esc_html($font_size); ?>;
                 transition: opacity 0.3s ease;
@@ -192,7 +201,7 @@ class Weather_Dashboard {
             .twd-horizontal {
                 display: flex;
                 flex-wrap: wrap;
-                justify-content: center;
+                justify-content: <?php echo esc_html($justify_content); ?>;
                 gap: <?php echo esc_html($card_gap); ?>;
             }
             .twd-card {
@@ -343,8 +352,8 @@ class Weather_Dashboard {
         register_setting( 'twd_options', 'twd_icon_size',   [ 'default' => '3.5rem' ] );
         register_setting( 'twd_options', 'twd_card_gap',    [ 'default' => '12px' ] );
         register_setting( 'twd_options', 'twd_cache_time',  [ 'default' => '60' ] );
-        // NEW Setting
         register_setting( 'twd_options', 'twd_min_card_width', [ 'default' => '85px' ] );
+        register_setting( 'twd_options', 'twd_horizontal_align', [ 'default' => 'center' ] ); // NEW Setting
 
         add_settings_section( 'twd_section_data', 'Data Settings', null, 'weather_dashboard' );
         add_settings_section( 'twd_section_cities', 'City Management', null, 'weather_dashboard' );
@@ -353,13 +362,16 @@ class Weather_Dashboard {
         add_settings_field( 'twd_cache_time', 'Update Frequency (Minutes)', [ $this, 'text_field_cb' ], 'weather_dashboard', 'twd_section_data', ['label_for' => 'twd_cache_time', 'desc' => 'How often to fetch new data (e.g., 5, 10, or 60). Lower = more "real-time" but slightly slower page loads.'] );
         add_settings_field( 'twd_cities_list', 'Cities List', [ $this, 'cities_field_cb' ], 'weather_dashboard', 'twd_section_cities' );
         add_settings_field( 'twd_use_animated', 'Icon Type', [ $this, 'checkbox_field_cb' ], 'weather_dashboard', 'twd_section_style', ['label_for' => 'twd_use_animated', 'desc' => 'Use Animated SVGs'] );
+        
+        // NEW Alignment Field
+        add_settings_field( 'twd_horizontal_align', 'Horizontal Alignment', [ $this, 'select_align_cb' ], 'weather_dashboard', 'twd_section_style', ['label_for' => 'twd_horizontal_align'] );
+        
         add_settings_field( 'twd_bg_color', 'Card Background', [ $this, 'color_field_cb' ], 'weather_dashboard', 'twd_section_style', ['label_for' => 'twd_bg_color'] );
         add_settings_field( 'twd_text_color', 'Text Color', [ $this, 'color_field_cb' ], 'weather_dashboard', 'twd_section_style', ['label_for' => 'twd_text_color'] );
         add_settings_field( 'twd_font_size', 'Base Font Size', [ $this, 'text_field_cb' ], 'weather_dashboard', 'twd_section_style', ['label_for' => 'twd_font_size', 'desc' => 'e.g., 16px'] );
         add_settings_field( 'twd_temp_font_size', 'Temperature Size', [ $this, 'text_field_cb' ], 'weather_dashboard', 'twd_section_style', ['label_for' => 'twd_temp_font_size', 'desc' => 'e.g., 1.6em or 32px'] );
         add_settings_field( 'twd_icon_size', 'Icon Size', [ $this, 'text_field_cb' ], 'weather_dashboard', 'twd_section_style', ['label_for' => 'twd_icon_size', 'desc' => 'e.g., 3.5rem or 60px'] );
         add_settings_field( 'twd_card_gap', 'Card Gap', [ $this, 'text_field_cb' ], 'weather_dashboard', 'twd_section_style', ['label_for' => 'twd_card_gap', 'desc' => 'e.g., 12px'] );
-        // NEW Field
         add_settings_field( 'twd_min_card_width', 'Minimum Card Width', [ $this, 'text_field_cb' ], 'weather_dashboard', 'twd_section_style', ['label_for' => 'twd_min_card_width', 'desc' => 'e.g., 85px or 120px'] );
     }
 
@@ -374,6 +386,23 @@ class Weather_Dashboard {
         }
         echo '<textarea name="twd_cities_list" rows="10" cols="50" style="font-family:monospace;">' . esc_textarea( $value ) . '</textarea>';
         echo '<p class="description">Format: <code>City Name|Lat|Lon</code></p>';
+    }
+
+    // New Alignment Select Callback
+    public function select_align_cb( $args ) {
+        $id = $args['label_for'];
+        $val = get_option( $id, 'center' );
+        $options = [
+            'left' => 'Left',
+            'center' => 'Center',
+            'right' => 'Right'
+        ];
+        echo '<select name="' . esc_attr( $id ) . '">';
+        foreach ( $options as $key => $label ) {
+            $selected = selected( $val, $key, false );
+            echo '<option value="' . esc_attr( $key ) . '" ' . $selected . '>' . esc_html( $label ) . '</option>';
+        }
+        echo '</select>';
     }
 
     public function checkbox_field_cb( $args ) {
