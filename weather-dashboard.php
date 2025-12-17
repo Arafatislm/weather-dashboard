@@ -4,7 +4,7 @@
  * Plugin URI: https://github.com/Arafatislm/weather-dashboard
  * Description: Displays weather for specific cities using Open-Meteo API. Use [weather_dashboard].
  * Version: 3.0.0
- * Author: Arafatul Islam
+ * Author: Arafat
  * Author URI: https://arafatislam.net
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
