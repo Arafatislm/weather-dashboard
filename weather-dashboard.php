@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Weather Dashboard
- * Plugin URI: https://github.com/arafat/weather-dashboard
+ * Plugin URI: https://github.com/Arafatislm/weather-dashboard
  * Description: Displays weather for specific cities using Open-Meteo API. Use [weather_dashboard].
  * Version: 3.0.0
  * Author: Arafatul Islam
