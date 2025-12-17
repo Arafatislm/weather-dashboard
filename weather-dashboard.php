@@ -214,6 +214,7 @@ class Weather_Dashboard {
                 min-width: <?php echo esc_html($min_card_width); ?>;
                 flex-direction: column;
                 align-items: center;
+                line-height: 1em;
                 justify-content: space-between;
                 gap: 0px;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.05);
