@@ -221,7 +221,7 @@ class Weather_Dashboard {
                 color: <?php echo esc_html($text_color); ?>;
             }
             .twd-card-city { margin: 0; font-size: 1em; font-weight: 500; line-height: 1.2; text-align: center; }
-            .twd-weather-row { display: flex; align-items: center; justify-content: center; gap: 2px; margin: 5px 0; }
+            .twd-weather-row { display: flex; align-items: center; justify-content: center; gap: 2px; margin: 0; }
             .twd-card-icon { margin: 0; display: flex; align-items: center; justify-content: center; height: <?php echo esc_html($icon_size); ?>; width: <?php echo esc_html($icon_size); ?>; }
             .twd-anim-icon { max-width: 100%; max-height: 100%; object-fit: contain; display: block; margin: 0 auto; }
             .twd-emoji { font-size: <?php echo esc_html($icon_size); ?>; line-height: 1; }
